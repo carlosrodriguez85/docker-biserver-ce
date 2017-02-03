@@ -45,6 +45,8 @@ services:
     image: mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - ./data/mysql:/var/lib/mysql:rw
     ports:
       - "3306:3306"
 
