@@ -36,7 +36,7 @@ $ cd docker-biserver-ce
 $ docker-compose up -d
 $ docker-compose logs -f
 ```
-After the image is started, you should be able to access Pentaho through [http://localhost:8080](http://localhost:8080)(admin/password) or [http://localhost:8080/jamon](http://localhost:8080/jamon)(no login required). Moreover, you will have access to MySQL through phpMyAdmin on [http://localhost:8081](http://localhost:8081)(db/root/password).
+After the services are started, you should be able to access Pentaho through [http://localhost:8080](http://localhost:8080)(admin/password) or [http://localhost:8080/jamon](http://localhost:8080/jamon)(no login required). Moreover, you will have access to MySQL through phpMyAdmin on [http://localhost:8081](http://localhost:8081)(db/root/password).
 
 ## Acknowledgements
 Forked from: [https://github.com/zhicwu/docker-biserver-ce]
