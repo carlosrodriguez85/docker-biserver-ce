@@ -4,10 +4,10 @@ services:
   biserver:
     image: zhicwu/biserver-ce${BI_IMAGE_TAG}
     hostname: ${SERVER_HOST}
-    depends_on:
-      - db
     container_name: ${BI_CONTAINER_NAME}
     command: biserver
+    depends_on:
+      - db
     ports:
       - "${SERVER_HTTP_PORT}:8080"
       - "${SERVER_AJP_PORT}:8009"
@@ -34,12 +34,16 @@ services:
     # see more at https://github.com/docker/docker/issues/21051 and https://docs.docker.com/engine/security/seccomp/
     security_opt:
       - seccomp:unconfined
+    # https://fabiokung.com/2014/03/13/memory-inside-linux-containers/
+    #mem_limit: 5000M
+    #memswap_limit: 5000M
     ulimits:
       nproc: 65535
       nofile:
         soft: 65535
         hard: 65535
     restart: always
+
 
   db:
     image: mysql

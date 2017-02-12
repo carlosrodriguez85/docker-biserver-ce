@@ -1,5 +1,5 @@
 # docker-biserver-ce
-Pentaho BI server(community edition) 7.0 + MySQL + phpMyAdmin docker image. 
+Pentaho BI server(community edition) docker image. https://hub.docker.com/r/zhicwu/biserver-ce/
 
 ## What's inside
 ```
@@ -14,8 +14,6 @@ ubuntu:16.04
 * Official Ubuntu 16.04 LTS docker image
 * Latest [Phusion Base Image](https://github.com/phusion/baseimage-docker)
 * Oracle JDK 8 latest release
-* Mysql latest release
-* phpMyAdmin latest release
 * [Pentaho BI Server Community Edition](http://community.pentaho.com/) 7.0.0.0-25 with plugins and patches:
  * [BTable](https://sourceforge.net/projects/btable/)
  * [Community Text Editor](http://www.webdetails.pt/ctools/cte/)
@@ -28,17 +26,39 @@ ubuntu:16.04
 - Not able to import mondrian schema in console, you'll have to use schema workbench to publish schema to BI server
 
 ## Get started
-- Use docker-compose
+- Run vanilla Pentaho server
 ```
-$ git clone https://github.com/carlosrodriguez85/docker-biserver-ce.git
+$ docker run --name bi -p 8080:8080 -d zhicwu/biserver-ce:7.0 biserver
+$ docker logs -f bi
+```
+- Run patched Pentaho server
+```
+$ docker run --name bi -e APPLY_PATCHES=Y -p 8080:8080 -d zhicwu/biserver-ce:7.0 biserver
+$ docker logs -f bi
+```
+- Use docker-compose (Recommended)
+```
+$ git clone https://github.com/zhicwu/docker-biserver-ce.git -b 7.0 --single-branch
 $ cd docker-biserver-ce
 ... edit .env and/or docker-compose.yml based on your needs, put your Pentaho configuration files under ext directory if necessary ...
 $ docker-compose up -d
 $ docker-compose logs -f
 ```
-After the services are started, you should be able to access Pentaho through [http://localhost:8080](http://localhost:8080)(admin/password) or [http://localhost:8080/jamon](http://localhost:8080/jamon)(no login required). Moreover, you will have access to MySQL through phpMyAdmin on [http://localhost:8081](http://localhost:8081)(db/root/password).
+Regardless which approach you took, after server started, you should be able to access [http://localhost:8080](http://localhost:8080)(admin/password) or [http://localhost:8080/jamon](http://localhost:8080/jamon)(no login required).
 
-## Acknowledgements
-Forked from: [https://github.com/zhicwu/docker-biserver-ce]
+## How to use external database
+Taking MySQL 5.x as an example. Assuming you have pbi_repository, pbi_quartz and pdi_jcr 3 databases created, change docker-compose.yml to set STORAGE_TYPE to mysql5, and then mount volume ./secret.env:/biserver-ce/data/secret.env:rw: with the following content:
+```
+SERVER_PASSWD=password
+DB_HOST=xxx
+DB_PORT=3306
+DB_USER=xxx
+DB_PASSWD=xxx
+```
 
-MySQL + phpMyAdmin configuration from: [http://stackoverflow.com/questions/39054411/docker-connecting-phpmyadmin-to-mysql-doesnt-work]
+## How to build
+```
+$ git clone https://github.com/zhicwu/docker-biserver-ce.git -b 7.0 --single-branch
+$ cd docker-biserver-ce
+$ docker build -t my/biserver:7.0 .
+```
