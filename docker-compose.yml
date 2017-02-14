@@ -6,8 +6,6 @@ services:
     hostname: ${SERVER_HOST}
     container_name: ${BI_CONTAINER_NAME}
     command: biserver
-    depends_on:
-      - db
     ports:
       - "${SERVER_HTTP_PORT}:8080"
       - "${SERVER_AJP_PORT}:8009"
