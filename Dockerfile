@@ -9,7 +9,7 @@ FROM zhicwu/java:8
 MAINTAINER Zhichun Wu <zhicwu@gmail.com>
 
 # Set environment variables
-ENV BISERVER_VERSION=7.0 BISERVER_BUILD=7.0.0.0-25 PDI_PATCH=7.0.0.0.3 \
+ENV BISERVER_VERSION=6.1 BISERVER_BUILD=6.1.0.1-196 PDI_PATCH=6.1.0.1.3 \
 	BISERVER_HOME=/biserver-ce BISERVER_USER=pentaho \
 	KETTLE_HOME=/biserver-ce/pentaho-solutions/system/kettle \
 	JNA_VERSION=4.2.2 OSHI_VERSION=3.2 POSTGRESQL_DRIVER_VERSION=9.4.1212 \
@@ -21,11 +21,9 @@ LABEL java_server="Pentaho BA Server $BISERVER_VERSION Community Edition"
 
 # Install vanilla Pentaho server along with minor changes to configuration
 RUN echo "Download and unpack Pentaho server..." \
-	&& wget --progress=dot:giga http://downloads.sourceforge.net/project/pentaho/Business%20Intelligence%20Server/${BISERVER_VERSION}/pentaho-server-ce-${BISERVER_BUILD}.zip \
+	&& wget --progress=dot:giga http://downloads.sourceforge.net/project/pentaho/Business%20Intelligence%20Server/${BISERVER_VERSION}/biserver-ce-${BISERVER_BUILD}.zip \
 	&& unzip -q *.zip \
 	&& rm -f *.zip \
-	&& mv /pentaho-server $BISERVER_HOME \
-	&& ln -s $BISERVER_HOME /pentaho-server \
 	&& find $BISERVER_HOME -name "*.bat" -delete \
 	&& find $BISERVER_HOME -name "*.exe" -delete \
 	&& mkdir -p $BISERVER_HOME/data/.hsqldb \
@@ -72,21 +70,21 @@ RUN echo "Download and install JDBC drivers..." \
 			http://central.maven.org/maven2/com/github/zhicwu/cassandra-jdbc-driver/${CASSANDRA_DRIVER_VERSION}/cassandra-jdbc-driver-${CASSANDRA_DRIVER_VERSION}-shaded.jar \
 			http://central.maven.org/maven2/com/h2database/h2/${H2DB_VERSION}/h2-${H2DB_VERSION}.jar \
 			http://central.maven.org/maven2/org/hsqldb/hsqldb/${HSQLDB_VERSION}/hsqldb-${HSQLDB_VERSION}.jar \
-	&& wget --progress=dot:giga  -O tomcat/webapps/pentaho/docs/xmla-connector.exe https://sourceforge.net/projects/xmlaconnect/files/XMLA_Provider_v${XMLA_PROVIDER_VERSION}.exe/download \
+	&& wget --progress=dot:giga -O $BISERVER_HOME/tomcat/webapps/pentaho/docs/xmla-connector.exe https://sourceforge.net/projects/xmlaconnect/files/XMLA_Provider_v${XMLA_PROVIDER_VERSION}.exe/download \
 	&& sed -i -e 's|\( class="bannercontent">.*\)\(<br /></td>\)|\1<br />To access OLAP cube via Excel/SharePoint, please install <a href="xmla-connector.exe">XMLA Connector</a> from <a href="http://www.arquery.com">Arquery</a>.\2|' tomcat/webapps/pentaho/docs/InformationMap.jsp \
 	&& rm -f tomcat/lib/postgre*.jar tomcat/lib/mysql*.jar tomcat/lib/jtds*.jar tomcat/lib/h2*.jar tomcat/lib/hsqldb*.jar \
 	&& mv *.jar $BISERVER_HOME/tomcat/lib/.
 
 # Install plugins
 RUN echo "Download plugins..." \
-	&& wget -P $BISERVER_HOME/tomcat/webapps/pentaho/WEB-INF/lib https://github.com/zhicwu/saiku/releases/download/3.8.8-SNAPSHOT/saiku-olap-util-3.8.8.jar \
-	&& wget -O btable.zip https://sourceforge.net/projects/btable/files/Version3.0-3.6/BTable-pentaho7-3.6-STABLE.zip/download \
+	&& wget -P $BISERVER_HOME/tomcat/webapps/pentaho/WEB-INF/lib https://github.com/zhicwu/saiku/releases/download/tag-3.8.8/saiku-olap-util-3.8.8.jar \
+	&& wget -O btable.zip http://sourceforge.net/projects/btable/files/Version3.0-3.6/BTable-pentaho5-and-pentaho6-3.0-STABLE.zip/download \
 	&& wget -O saiku-chart-plus.zip http://sourceforge.net/projects/saikuchartplus/files/SaikuChartPlus3/saiku-chart-plus-vSaiku3-plugin-pentaho.zip/download \
 	&& wget -O jamon.zip https://sourceforge.net/projects/jamonapi/files/jamonapi/v2_81/jamonall-2.81.zip/download \
-	&& wget --progress=dot:giga https://github.com/zhicwu/saiku/releases/download/3.8.8-SNAPSHOT/saiku-plugin-p6-3.8.8.zip \
-			https://github.com/zhicwu/cte/releases/download/7.0-SNAPSHOT/cte-7.0-snapshot.zip \
-			http://ctools.pentaho.com/files/d3ComponentLibrary/14.06.18/d3ComponentLibrary-14.06.18.zip \
-			https://github.com/rpbouman/pash/raw/master/bin/pash.zip \
+	&& wget --progress=dot:giga https://github.com/zhicwu/saiku/releases/download/tag-3.8.8/saiku-plugin-p61-3.8.8.zip \
+		http://ci.pentaho.com/job/webdetails-cte/26/artifact/dist/cte-6.0-SNAPSHOT.zip \
+		http://ctools.pentaho.com/files/d3ComponentLibrary/14.06.18/d3ComponentLibrary-14.06.18.zip \
+		https://github.com/rpbouman/pash/raw/master/bin/pash.zip \
 	&& echo "Installing plugins..." \
 		&& for i in *.zip; do echo "Unpacking $i..." && unzip -q -d pentaho-solutions/system $i && rm -f $i; done \
 		&& rm -f pentaho-solutions/system/BTable/resources/datasources/*.cda \
@@ -114,11 +112,11 @@ RUN echo "Download plugins..." \
 # Download patches and dependencies
 RUN echo "Download patches and dependencies..." \
 	&& wget https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna/$JNA_VERSION/jna-$JNA_VERSION.jar \
-			https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna-platform/$JNA_VERSION/jna-platform-$JNA_VERSION.jar \
-			http://central.maven.org/maven2/com/github/dblock/oshi-core/$OSHI_VERSION/oshi-core-$OSHI_VERSION.jar \
+		https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna-platform/$JNA_VERSION/jna-platform-$JNA_VERSION.jar \
+		http://central.maven.org/maven2/com/github/dblock/oshi-core/$OSHI_VERSION/oshi-core-$OSHI_VERSION.jar \
 	&& mv *.jar tomcat/webapps/pentaho/WEB-INF/lib/. \
 	&& wget --progress=dot:giga https://github.com/zhicwu/pdi-cluster/releases/download/${PDI_PATCH}/pentaho-kettle-${PDI_PATCH}.jar \
-			https://github.com/zhicwu/pdi-cluster/releases/download/${PDI_PATCH}/pentaho-platform-${PDI_PATCH}.jar
+		https://github.com/zhicwu/pdi-cluster/releases/download/${PDI_PATCH}/pentaho-platform-${PDI_PATCH}.jar
 
 # Add entry point, tempaltes and cron jobs
 COPY docker-entrypoint.sh $BISERVER_HOME/docker-entrypoint.sh

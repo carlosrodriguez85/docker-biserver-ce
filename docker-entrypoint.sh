@@ -3,9 +3,9 @@ set -e
 
 : ${EXT_DIR:="/bi-ext"}
 
-: ${BI_JAVA_OPTS:='-Djava.security.egd=file:/dev/./urandom -Xms4096m -Xmx4096m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:+PreserveFramePointer -Djava.awt.headless=true -Dpentaho.karaf.root.transient=true -XX:+HeapDumpOnOutOfMemoryError -XX:ErrorFile=../logs/jvm_error.log -XX:HeapDumpPath=../logs/ -verbose:gc -Xloggc:../logs/gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintStringDeduplicationStatistics -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=2 -XX:GCLogFileSize=64M -XX:OnOutOfMemoryError=/usr/bin/oom_killer -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000 -Dfile.encoding=utf8 -DDI_HOME=\"$DI_HOME\"'}
+: ${BI_JAVA_OPTS:='-Djava.security.egd=file:/dev/./urandom -Xms4096m -Xmx4096m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:+PreserveFramePointer -Djava.awt.headless=true -Dpentaho.karaf.root.transient=true -XX:+HeapDumpOnOutOfMemoryError -XX:ErrorFile=../logs/jvm_error.log -XX:HeapDumpPath=../logs/ -verbose:gc -Xloggc:../logs/gc.log -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintStringDeduplicationStatistics -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=2 -XX:GCLogFileSize=64M -XX:OnOutOfMemoryError=/usr/bin/oom_killer -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000 -Dfile.encoding=utf8 -DDI_HOME=\"$DI_HOME\"'}
 
-: ${PDI_HADOOP_CONFIG:="hdp24"}
+: ${PDI_HADOOP_CONFIG:="hdp23"}
 
 : ${PDI_MAX_LOG_LINES:="10000"}
 : ${PDI_MAX_LOG_TIMEOUT:="1440"}
@@ -192,10 +192,10 @@ KETTLE_DISABLE_CONSOLE_LOGGING=Y
 apply_patches() {
 	if [ "$APPLY_PATCHES" != "" ] && [ -f pentaho-kettle*.jar ] && [ -f pentaho-platform*.jar ]; then
 		echo "Applying patches..." \
-			&& mkdir -p patches \
-			&& unzip -q pentaho-kettle*.jar -d patches \
-			&& unzip -oq pentaho-platform*.jar -d patches \
-			&& cd patches \
+			&& mkdir -p $BISERVER_HOME/patches \
+			&& unzip -q $BISERVER_HOME/pentaho-kettle*.jar -d $BISERVER_HOME/patches \
+			&& unzip -oq $BISERVER_HOME/pentaho-platform*.jar -d $BISERVER_HOME/patches \
+			&& cd $BISERVER_HOME/patches \
 			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/pdi-pur-plugin-${BISERVER_BUILD}.jar org/pentaho/di/repository/pur/LazyUnifiedRepositoryDirectory.class \
 			&& $JAVA_HOME/bin/jar uf ../pentaho-solutions/system/kettle/plugins/pdi-pur-plugin/lib/pdi-pur-plugin-${BISERVER_BUILD}.jar org/pentaho/di/repository/pur/LazyUnifiedRepositoryDirectory.class \
 			&& $JAVA_HOME/bin/jar uf ../pentaho-solutions/system/kettle/plugins/pdi-pur-plugin/pdi-pur-plugin-${BISERVER_BUILD}.jar org/pentaho/di/repository/pur/LazyUnifiedRepositoryDirectory.class \
@@ -204,23 +204,23 @@ apply_patches() {
 			&& rm -rf org/pentaho/di/repository \
 			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/kettle-core-${BISERVER_BUILD}.jar org/pentaho/di/core/database \
 			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/kettle-core-${BISERVER_BUILD}.jar org/pentaho/di/core/row \
+			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/kettle-core-${BISERVER_BUILD}.jar org/pentaho/di/core/util \
 			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/kettle-core-${BISERVER_BUILD}.jar org/pentaho/di/cluster/SlaveConnectionManager*.class \
-			&& rm -rf org/pentaho/di/core/database org/pentaho/di/core/row org/pentaho/di/cluster/SlaveConnectionManager*.class \
+			&& rm -rf org/pentaho/di/core/database org/pentaho/di/core/row org/pentaho/di/core/util org/pentaho/di/cluster/SlaveConnectionManager*.class \
 			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/kettle-engine-${BISERVER_BUILD}.jar kettle-servlets.xml \
 			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/kettle-engine-${BISERVER_BUILD}.jar org/pentaho/di \
 			&& rm -rf org/pentaho/di \
 			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/pentaho-platform-scheduler-${BISERVER_BUILD}.jar org/pentaho/platform/scheduler2/quartz \
-			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/pentaho-reporting-engine-classic-core-platform-plugin-${BISERVER_BUILD}.jar org/pentaho/reporting/platform/plugin/connection \
 			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/pentaho-platform-core-${BISERVER_BUILD}.jar org/pentaho/platform/engine/services \
+			&& $JAVA_HOME/bin/jar uf ../tomcat/webapps/pentaho/WEB-INF/lib/pentaho-reporting-engine-classic-core-platform-plugin-${BISERVER_BUILD}.jar org/pentaho/reporting/platform/plugin/connection \
 			&& cd - \
-			&& rm -rf patches *.jar
+			&& rm -rf $BISERVER_HOME/patches $BISERVER_HOME/*.jar \
 		
 		rm -f pentaho-solutions/system/kettle/slave-server-config.xml \
 			&& gen_kettle_config
 		
 		echo "Updating configuration..." \
 			&& sed -i -e 's|\(<bean id="IAuditEntry" class="\).*|\1org.pentaho.platform.engine.core.audit.NullAuditEntry" scope="singleton" />|' pentaho-solutions/system/pentahoObjects.spring.xml \
-			&& sed -i -e 's|\(.*<default-theme>\).*\(</default-theme>\)|\1crystal\2|' pentaho-solutions/system/pentaho.xml \
 			&& sed -i -e 's|\(<log-level>\).*\(</log-level>\)|\1INFO\2|' pentaho-solutions/system/pentaho.xml \
 			&& sed -i -e 's|\(<max-act-conn>\).*\(</max-act-conn>\)|\150\2|' pentaho-solutions/system/pentaho.xml \
 			&& sed -i -e 's|\(<sampledata-datasource>\).*|<!-- \1|' pentaho-solutions/system/pentaho.xml \
@@ -231,6 +231,7 @@ apply_patches() {
 			&& sed -i -e '/^#/! s/\(.*\)/#\1/g' pentaho-solutions/system/simple-jndi/jdbc.properties \
 			&& sed -i -e 's|\(\A/logout.*\Z=Anonymous\)|\1\n\\A/kettle/add.*\\Z=Admin\n\\A/kettle/allocate.*\\Z=Admin\n\\A/kettle/cleanup.*\\Z=Admin\n\\A/kettle/execute.*\\Z=Admin\n\\A/kettle/getslave.*\\Z=Admin\n\\A/kettle/next.*\\Z=Admin\n\\A/kettle/pause.*\\Z=Admin\n\\A/kettle/prepare.*\\Z=Admin\n\\A/kettle/register.*\\Z=Admin\n\\A/kettle/remove.*\\Z=Admin\n\\A/kettle/run.*\\Z=Admin\n\\A/kettle/start.*\\Z=Admin\n\\A/kettle/stop.*\\Z=Admin\n\\A/plugin/cda/api/clearCache.*\\Z=Authenticated\n\\A/plugin/saiku/api/admin/discover/refresh.*\\Z=Authenticated|' pentaho-solutions/system/applicationContext-spring-security.xml \
 			&& sed -i -e 's|\(<import resource="GettingStartedDB-spring.xml" />\).*|<!-- \1 -->|' pentaho-solutions/system/pentaho-spring-beans.xml \
+			&& sed -i -e 's|"{{{dialog.content.footer}}"|"{{{dialog.content.footer}}}"|' tomcat/webapps/pentaho/mantle/browser/js/browser.dialogs.templates.js \
 			&& sed -i -e "s|<script language='JavaScript' type='text/javascript' src='.*brightcove.com.*'></script>||" tomcat/webapps/pentaho/mantle/home/index.jsp \
 			&& sed -i -e "s|script.src = '.*brightcove.*';||" tomcat/webapps/pentaho/mantle/home/content/getting_started_launch.html \
 			&& sed -i -e 's|"<script.*brightcove.*script>";|"";|' tomcat/webapps/pentaho/mantle/home/js/gettingStarted.js \
